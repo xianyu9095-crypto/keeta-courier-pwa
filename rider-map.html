@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#FFD100">
+    <title>骑手 ECODE 映射管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding-bottom: 100px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #FFD100 0%, #FFA500 100%);
+            padding: 20px;
+            padding-top: max(20px, env(safe-area-inset-top));
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            background: white;
+            outline: none;
+        }
+
+        .search-input::placeholder {
+            color: #999;
+        }
+
+        .stats {
+            display: flex;
+            gap: 15px;
+            padding: 15px 20px;
+            background: white;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stat-item {
+            flex: 1;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #FFD100;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .rider-list {
+            padding: 15px;
+        }
+
+        .rider-card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .rider-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #FFD100 0%, #FFA500 100%);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .rider-info {
+            flex: 1;
+        }
+
+        .rider-name {
+            font-size: 17px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 6px;
+        }
+
+        .rider-ecode {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #f5f5f5;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .rider-ecode .label {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .rider-ecode .value {
+            font-weight: 600;
+            color: #333;
+            font-family: monospace;
+        }
+
+        .rider-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: #f5f5f5;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-icon.delete {
+            background: #ffebee;
+        }
+
+        .btn-icon.delete:hover {
+            background: #ffcdd2;
+        }
+
+        .fab {
+            position: fixed;
+            bottom: max(20px, env(safe-area-inset-bottom));
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #FFD100 0%, #FFA500 100%);
+            border: none;
+            border-radius: 50%;
+            font-size: 28px;
+            color: #333;
+            box-shadow: 0 4px 20px rgba(255, 209, 0, 0.4);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .fab:active {
+            transform: scale(0.95);
+        }
+
+        /* 模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            justify-content: center;
+            align-items: flex-end;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 500px;
+            border-radius: 24px 24px 0 0;
+            padding: 24px;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #f5f5f5;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: #FFD100;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #FFD100 0%, #FFA500 100%);
+            border: none;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: 600;
+            color: #333;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn-submit:active {
+            opacity: 0.9;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state .icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+        }
+
+        .batch-import {
+            padding: 15px 20px;
+            background: white;
+            border-bottom: 1px solid #eee;
+        }
+
+        .btn-batch {
+            width: 100%;
+            padding: 12px;
+            background: #f5f5f5;
+            border: 2px dashed #ddd;
+            border-radius: 12px;
+            font-size: 15px;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-batch:hover {
+            border-color: #FFD100;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🛵 骑手 ECODE 映射</h1>
+        <div class="search-box">
+            <input type="text" class="search-input" id="searchInput" placeholder="搜索骑手名字或 ECODE...">
+        </div>
+    </div>
+
+    <div class="stats">
+        <div class="stat-item">
+            <div class="stat-value" id="totalCount">0</div>
+            <div class="stat-label">总骑手</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value" id="onlineCount">-</div>
+            <div class="stat-label">在线</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value" id="offlineCount">-</div>
+            <div class="stat-label">离线</div>
+        </div>
+    </div>
+
+    <div class="batch-import">
+        <button class="btn-batch" onclick="showBatchImport()">📋 批量导入数据（名字,ECODE）</button>
+    </div>
+
+    <div class="rider-list" id="riderList">
+        <!-- 骑手列表将在这里显示 -->
+    </div>
+
+    <div class="empty-state" id="emptyState" style="display: none;">
+        <div class="icon">📝</div>
+        <p>暂无骑手数据<br>点击右下角 + 添加</p>
+    </div>
+
+    <button class="fab" onclick="showAddModal()">+</button>
+
+    <!-- 添加/编辑模态框 -->
+    <div class="modal" id="riderModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">添加骑手</div>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <form id="riderForm" onsubmit="saveRider(event)">
+                <input type="hidden" id="riderId">
+                <div class="form-group">
+                    <label class="form-label">骑手名字</label>
+                    <input type="text" class="form-input" id="riderName" placeholder="请输入骑手名字" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">ECODE（员工编号）</label>
+                    <input type="text" class="form-input" id="riderEcode" placeholder="例如: EC001234" required>
+                </div>
+                <button type="submit" class="btn-submit">保存</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 批量导入模态框 -->
+    <div class="modal" id="batchModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">批量导入</div>
+                <button class="modal-close" onclick="closeBatchModal()">✕</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">粘贴数据（格式：名字,ECODE）</label>
+                <textarea class="form-input" id="batchData" rows="10" placeholder="张三,EC001&#10;李四,EC002&#10;王五,EC003" style="resize: none;"></textarea>
+            </div>
+            <button class="btn-submit" onclick="importBatch()">导入</button>
+        </div>
+    </div>
+
+    <script>
+        // 骑手数据存储
+        let riders = JSON.parse(localStorage.getItem('riderMap') || '[]');
+        let editingId = null;
+
+        // 渲染骑手列表
+        function renderRiders(filter = '') {
+            const list = document.getElementById('riderList');
+            const emptyState = document.getElementById('emptyState');
+
+            let displayRiders = riders;
+            if (filter) {
+                const lowerFilter = filter.toLowerCase();
+                displayRiders = riders.filter(r =>
+                    r.name.toLowerCase().includes(lowerFilter) ||
+                    r.ecode.toLowerCase().includes(lowerFilter)
+                );
+            }
+
+            // 排序：按名字拼音
+            displayRiders.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'));
+
+            if (displayRiders.length === 0) {
+                list.innerHTML = '';
+                emptyState.style.display = 'block';
+            } else {
+                emptyState.style.display = 'none';
+                list.innerHTML = displayRiders.map(rider => `
+                    <div class="rider-card">
+                        <div class="rider-avatar">🛵</div>
+                        <div class="rider-info">
+                            <div class="rider-name">${escapeHtml(rider.name)}</div>
+                            <div class="rider-ecode">
+                                <span class="label">ECODE</span>
+                                <span class="value">${escapeHtml(rider.ecode)}</span>
+                            </div>
+                        </div>
+                        <div class="rider-actions">
+                            <button class="btn-icon" onclick="editRider('${rider.id}')" title="编辑">✏️</button>
+                            <button class="btn-icon delete" onclick="deleteRider('${rider.id}')" title="删除">🗑️</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // 更新统计
+            document.getElementById('totalCount').textContent = riders.length;
+        }
+
+        // HTML转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 显示添加模态框
+        function showAddModal() {
+            editingId = null;
+            document.getElementById('modalTitle').textContent = '添加骑手';
+            document.getElementById('riderForm').reset();
+            document.getElementById('riderModal').classList.add('show');
+        }
+
+        // 显示编辑模态框
+        function editRider(id) {
+            const rider = riders.find(r => r.id === id);
+            if (rider) {
+                editingId = id;
+                document.getElementById('modalTitle').textContent = '编辑骑手';
+                document.getElementById('riderName').value = rider.name;
+                document.getElementById('riderEcode').value = rider.ecode;
+                document.getElementById('riderModal').classList.add('show');
+            }
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            document.getElementById('riderModal').classList.remove('show');
+        }
+
+        // 保存骑手
+        function saveRider(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('riderName').value.trim();
+            const ecode = document.getElementById('riderEcode').value.trim();
+
+            if (editingId) {
+                // 编辑
+                const index = riders.findIndex(r => r.id === editingId);
+                if (index !== -1) {
+                    riders[index] = { id: editingId, name, ecode };
+                }
+            } else {
+                // 新增
+                riders.push({
+                    id: Date.now().toString(),
+                    name,
+                    ecode
+                });
+            }
+
+            saveData();
+            closeModal();
+            renderRiders();
+        }
+
+        // 删除骑手
+        function deleteRider(id) {
+            if (confirm('确定要删除这个骑手吗？')) {
+                riders = riders.filter(r => r.id !== id);
+                saveData();
+                renderRiders();
+            }
+        }
+
+        // 保存到本地存储
+        function saveData() {
+            localStorage.setItem('riderMap', JSON.stringify(riders));
+        }
+
+        // 搜索功能
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            renderRiders(e.target.value);
+        });
+
+        // 批量导入
+        function showBatchImport() {
+            document.getElementById('batchModal').classList.add('show');
+        }
+
+        function closeBatchModal() {
+            document.getElementById('batchModal').classList.remove('show');
+        }
+
+        function importBatch() {
+            const data = document.getElementById('batchData').value.trim();
+            if (!data) {
+                alert('请输入数据');
+                return;
+            }
+
+            const lines = data.split('\n');
+            let imported = 0;
+
+            lines.forEach(line => {
+                const parts = line.split(',');
+                if (parts.length >= 2) {
+                    const name = parts[0].trim();
+                    const ecode = parts[1].trim();
+                    if (name && ecode) {
+                        // 检查是否已存在
+                        const exists = riders.some(r => r.ecode === ecode);
+                        if (!exists) {
+                            riders.push({
+                                id: Date.now().toString() + Math.random(),
+                                name,
+                                ecode
+                            });
+                            imported++;
+                        }
+                    }
+                }
+            });
+
+            saveData();
+            renderRiders();
+            closeBatchModal();
+            document.getElementById('batchData').value = '';
+            alert(`成功导入 ${imported} 条数据`);
+        }
+
+        // 点击模态框外部关闭
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('show');
+                }
+            });
+        });
+
+        // 初始渲染
+        renderRiders();
+    </script>
+</body>
+</html>
