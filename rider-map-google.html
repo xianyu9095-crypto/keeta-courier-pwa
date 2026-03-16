@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#FFD100">
+    <title>骑手 ECODE 映射 - Google表格版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding-bottom: 100px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #FFD100 0%, #FFA500 100%);
+            padding: 20px;
+            padding-top: max(20px, env(safe-area-inset-top));
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            background: white;
+            outline: none;
+        }
+
+        .sync-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: white;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .sync-status.syncing {
+            color: #FFA500;
+        }
+
+        .sync-status.synced {
+            color: #4CAF50;
+        }
+
+        .sync-status.error {
+            color: #f44336;
+        }
+
+        .stats {
+            display: flex;
+            gap: 15px;
+            padding: 15px 20px;
+            background: white;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stat-item {
+            flex: 1;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #FFD100;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .config-section {
+            padding: 15px 20px;
+            background: #fff3e0;
+            border-bottom: 1px solid #ffe0b2;
+        }
+
+        .config-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 10px;
+            font-family: monospace;
+        }
+
+        .btn-config {
+            width: 100%;
+            padding: 12px;
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .rider-list {
+            padding: 15px;
+        }
+
+        .rider-card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .rider-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #FFD100 0%, #FFA500 100%);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .rider-info {
+            flex: 1;
+        }
+
+        .rider-name {
+            font-size: 17px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 6px;
+        }
+
+        .rider-ecode {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #f5f5f5;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .rider-ecode .label {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .rider-ecode .value {
+            font-weight: 600;
+            color: #333;
+            font-family: monospace;
+        }
+
+        .rider-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: #f5f5f5;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover {
+            background: #e0e0e0;
+        }
+
+        .fab {
+            position: fixed;
+            bottom: max(20px, env(safe-area-inset-bottom));
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #FFD100 0%, #FFA500 100%);
+            border: none;
+            border-radius: 50%;
+            font-size: 28px;
+            color: #333;
+            box-shadow: 0 4px 20px rgba(255, 209, 0, 0.4);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .fab:active {
+            transform: scale(0.95);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            justify-content: center;
+            align-items: flex-end;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 500px;
+            border-radius: 24px 24px 0 0;
+            padding: 24px;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #f5f5f5;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: #FFD100;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #FFD100 0%, #FFA500 100%);
+            border: none;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: 600;
+            color: #333;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .help-text {
+            padding: 15px 20px;
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            margin: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .help-text ol {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .help-text li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🛵 骑手 ECODE 映射</h1>
+        <div class="search-box">
+            <input type="text" class="search-input" id="searchInput" placeholder="搜索骑手名字或 ECODE...">
+        </div>
+    </div>
+
+    <div class="sync-status" id="syncStatus">
+        <span>⏳</span> 未配置表格
+    </div>
+
+    <div class="config-section" id="configSection">
+        <input type="text" class="config-input" id="sheetUrl" placeholder="粘贴 Google 表格链接...">
+        <button class="btn-config" onclick="connectSheet()">🔗 连接表格</button>
+    </div>
+
+    <div class="stats">
+        <div class="stat-item">
+            <div class="stat-value" id="totalCount">0</div>
+            <div class="stat-label">总骑手</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value" id="syncCount">-</div>
+            <div class="stat-label">已同步</div>
+        </div>
+    </div>
+
+    <div class="help-text" id="helpText">
+        <strong>📖 使用说明：</strong>
+        <ol>
+            <li>创建 Google 表格，第一列填<b>骑手名字</b>，第二列填<b>ECODE</b></li>
+            <li>点击"文件"→"发布到网络"→选择"整个文档"→点击"发布"</li>
+            <li>复制发布的链接，粘贴到上方输入框</li>
+            <li>点击"连接表格"即可同步数据</li>
+        </ol>
+    </div>
+
+    <div class="rider-list" id="riderList">
+        <div class="loading">请配置 Google 表格...</div>
+    </div>
+
+    <button class="fab" onclick="syncData()" title="刷新数据">🔄</button>
+
+    <!-- 模态框 -->
+    <div class="modal" id="riderModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">骑手详情</div>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div id="riderDetail">
+                <!-- 详情内容 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let riders = [];
+        let sheetId = localStorage.getItem('riderSheetId');
+
+        // 从 Google 表格 URL 提取 ID
+        function extractSheetId(url) {
+            // 支持多种格式
+            const patterns = [
+                /\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/,
+                /\/spreadsheets\/e\/([a-zA-Z0-9-_]+)/,
+                /docs\.google\.com\/spreadsheets\/[^/]+\/([a-zA-Z0-9-_]+)/
+            ];
+
+            for (let pattern of patterns) {
+                const match = url.match(pattern);
+                if (match) return match[1];
+            }
+
+            // 如果都没匹配到，假设整个 URL 就是 ID
+            return url.trim();
+        }
+
+        // 连接表格
+        function connectSheet() {
+            const url = document.getElementById('sheetUrl').value.trim();
+            if (!url) {
+                alert('请输入表格链接');
+                return;
+            }
+
+            const id = extractSheetId(url);
+            if (!id) {
+                alert('无法识别表格链接，请检查格式');
+                return;
+            }
+
+            sheetId = id;
+            localStorage.setItem('riderSheetId', sheetId);
+
+            // 隐藏配置区域
+            document.getElementById('configSection').style.display = 'none';
+            document.getElementById('helpText').style.display = 'none';
+
+            // 加载数据
+            syncData();
+        }
+
+        // 同步数据
+        async function syncData() {
+            if (!sheetId) {
+                alert('请先配置表格');
+                return;
+            }
+
+            updateSyncStatus('syncing', '⏳ 正在同步...');
+
+            try {
+                // 使用 CSV 导出方式
+                const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=Sheet1`;
+
+                const response = await fetch(csvUrl);
+                const csvText = await response.text();
+
+                // 解析 CSV
+                riders = parseCSV(csvText);
+
+                // 保存到本地缓存
+                localStorage.setItem('riderCache', JSON.stringify(riders));
+                localStorage.setItem('riderCacheTime', new Date().toISOString());
+
+                renderRiders();
+                updateSyncStatus('synced', `✅ 已同步 ${riders.length} 条数据`);
+                document.getElementById('syncCount').textContent = riders.length;
+
+            } catch (error) {
+                console.error('同步失败:', error);
+
+                // 尝试使用缓存
+                const cached = localStorage.getItem('riderCache');
+                if (cached) {
+                    riders = JSON.parse(cached);
+                    renderRiders();
+                    updateSyncStatus('error', '⚠️ 使用缓存数据（离线）');
+                } else {
+                    updateSyncStatus('error', '❌ 同步失败，请检查表格链接');
+                }
+            }
+        }
+
+        // 解析 CSV
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n');
+            const data = [];
+
+            // 跳过标题行，从第二行开始
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+
+                // 解析 CSV 行（处理引号）
+                const values = parseCSVLine(line);
+
+                if (values.length >= 2) {
+                    data.push({
+                        id: i,
+                        name: values[0].replace(/^"|"$/g, ''),
+                        ecode: values[1].replace(/^"|"$/g, '')
+                    });
+                }
+            }
+
+            return data;
+        }
+
+        // 解析 CSV 行
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+
+                if (char === '"') {
+                    if (inQuotes && line[i + 1] === '"') {
+                        current += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+
+            result.push(current.trim());
+            return result;
+        }
+
+        // 渲染骑手列表
+        function renderRiders(filter = '') {
+            const list = document.getElementById('riderList');
+
+            let displayRiders = riders;
+            if (filter) {
+                const lowerFilter = filter.toLowerCase();
+                displayRiders = riders.filter(r =>
+                    r.name.toLowerCase().includes(lowerFilter) ||
+                    r.ecode.toLowerCase().includes(lowerFilter)
+                );
+            }
+
+            // 排序
+            displayRiders.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'));
+
+            if (displayRiders.length === 0) {
+                list.innerHTML = '<div class="empty-state">未找到骑手数据</div>';
+            } else {
+                list.innerHTML = displayRiders.map(rider => `
+                    <div class="rider-card" onclick="showRiderDetail('${rider.id}')">
+                        <div class="rider-avatar">🛵</div>
+                        <div class="rider-info">
+                            <div class="rider-name">${escapeHtml(rider.name)}</div>
+                            <div class="rider-ecode">
+                                <span class="label">ECODE</span>
+                                <span class="value">${escapeHtml(rider.ecode)}</span>
+                            </div>
+                        </div>
+                        <div class="rider-actions">
+                            <button class="btn-icon" onclick="event.stopPropagation(); copyEcode('${escapeHtml(rider.ecode)}')" title="复制ECODE">📋</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            document.getElementById('totalCount').textContent = displayRiders.length;
+        }
+
+        // HTML转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 复制ECODE
+        function copyEcode(ecode) {
+            navigator.clipboard.writeText(ecode).then(() => {
+                alert('已复制: ' + ecode);
+            });
+        }
+
+        // 显示骑手详情
+        function showRiderDetail(id) {
+            const rider = riders.find(r => r.id == id);
+            if (rider) {
+                document.getElementById('riderDetail').innerHTML = `
+                    <div class="form-group">
+                        <label class="form-label">骑手名字</label>
+                        <div class="form-input" style="background: #f5f5f5;">${escapeHtml(rider.name)}</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">ECODE</label>
+                        <div class="form-input" style="background: #f5f5f5; font-family: monospace;">${escapeHtml(rider.ecode)}</div>
+                    </div>
+                    <button class="btn-submit" onclick="copyEcode('${escapeHtml(rider.ecode)}'); closeModal();">📋 复制 ECODE</button>
+                `;
+                document.getElementById('riderModal').classList.add('show');
+            }
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            document.getElementById('riderModal').classList.remove('show');
+        }
+
+        // 更新同步状态
+        function updateSyncStatus(type, text) {
+            const status = document.getElementById('syncStatus');
+            status.className = 'sync-status ' + type;
+            status.innerHTML = `<span>${text.split(' ')[0]}</span> ${text.split(' ').slice(1).join(' ')}`;
+        }
+
+        // 搜索功能
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            renderRiders(e.target.value);
+        });
+
+        // 点击模态框外部关闭
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('show');
+                }
+            });
+        });
+
+        // 页面加载时检查
+        if (sheetId) {
+            document.getElementById('configSection').style.display = 'none';
+            document.getElementById('helpText').style.display = 'none';
+            document.getElementById('sheetUrl').value = sheetId;
+
+            // 尝试使用缓存
+            const cached = localStorage.getItem('riderCache');
+            if (cached) {
+                riders = JSON.parse(cached);
+                renderRiders();
+                updateSyncStatus('synced', '✅ 使用缓存数据，点击刷新同步');
+            }
+
+            // 自动同步
+            syncData();
+        }
+    </script>
+</body>
+</html>
