@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iPad 调试版 - Keeta ECODE</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container { max-width: 600px; margin: 0 auto; }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1 { font-size: 22px; color: #333; margin-bottom: 10px; text-align: center; }
+        .step {
+            background: #fff3e0;
+            border-left: 4px solid #FF9800;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+        .code-box {
+            background: #f0f0f0;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 11px;
+            word-break: break-all;
+            margin: 10px 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: #FFD100;
+            color: #333;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .tip {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        .error { color: #d32f2f; }
+        .success { color: #388e3c; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>🔧 iPad 调试版</h1>
+
+            <div class="step">
+                <b>📋 步骤：</b>
+                <ol style="margin-left: 20px; margin-top: 10px;">
+                    <li>复制下面的调试代码</li>
+                    <li>按照之前的方法创建书签</li>
+                    <li>在美团页面点击书签</li>
+                    <li>查看弹出的调试信息</li>
+                </ol>
+            </div>
+
+            <p><b>调试代码（会显示详细信息）：</b></p>
+            <div class="code-box" id="debugCode">
+javascript:(async()=>{try{const s='1ygLS9F-lTiWONtHF0JY4SZpj7C7cFm0aLpLbS_iz9DE';alert('🚀 开始执行\n表格ID: '+s);const u=`https://docs.google.com/spreadsheets/d/${s}/gviz/tq?tqx=out:csv&sheet=Sheet1`;alert('📡 正在请求:\n'+u);const r=await fetch(u);alert('✅ 请求成功, 状态:'+r.status);const t=await r.text();alert('📄 获取数据长度:'+t.length+'字符');const l=t.split('\n');alert('📊 总行数:'+l.length);const riders=[];for(let i=1;i<l.length&&i<5;i++){const v=l[i].split(',');if(v[1]&&v[3])riders.push({n:v[1],e:v[3]})}alert('👥 找到骑手(前4个):\n'+riders.map(x=>x.n+'->'+x.e).join('\n'));let found=0;document.querySelectorAll('td,span,div').forEach(e=>{const txt=e.textContent.trim();if(txt&&txt.length>2&&txt.length<30){const m=riders.filter(r=>r.n.toLowerCase().includes(txt.toLowerCase())||txt.toLowerCase().includes(r.n.toLowerCase()));if(m.length===1){const b=document.createElement('span');b.style.cssText='background:#FFD100;padding:2px 6px;border-radius:4px;font-size:11px;margin-left:5px;';b.textContent=m[0].e;e.appendChild(b);found++}}});alert('✅ 完成! 匹配到'+found+'个骑手')}catch(e){alert('❌ 错误:\n'+e.message+'\n\n请检查:\n1. 网络连接\n2. 表格是否已发布\n3. 是否在美团页面')}})()
+            </div>
+            <button class="btn" onclick="copyDebugCode()">📋 复制调试代码</button>
+
+            <div class="tip">
+                <b>🔍 调试信息会显示：</b><br>
+                1. 表格ID是否正确<br>
+                2. 网络请求是否成功<br>
+                3. 获取到多少行数据<br>
+                4. 找到多少骑手<br>
+                5. 匹配成功多少个<br>
+                <br>
+                <b>如果显示错误，请截图发给我</b>
+            </div>
+
+            <div class="step" style="margin-top: 20px;">
+                <b>🆘 常见问题：</b><br><br>
+
+                <b>Q: 点击书签没有任何反应？</b><br>
+                A: 检查代码是否完整复制，特别是开头的 javascript: 不能少<br><br>
+
+                <b>Q: 显示"网络错误"？</b><br>
+                A: 检查 iPad 网络连接，或表格是否已发布到网络<br><br>
+
+                <b>Q: 显示"0个骑手"？</b><br>
+                A: 表格格式可能不对，确保第二列是名字，第四列是ECODE<br><br>
+
+                <b>Q: 显示"完成但0个匹配"？</b><br>
+                A: 页面上可能没有对应的名字，或名字拼写不同
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copyDebugCode() {
+            const code = document.getElementById('debugCode').textContent.trim();
+            navigator.clipboard.writeText(code).then(() => {
+                alert('✅ 调试代码已复制！');
+            }).catch(() => {
+                alert('❌ 复制失败，请长按代码框手动复制');
+            });
+        }
+    </script>
+</body>
+</html>
