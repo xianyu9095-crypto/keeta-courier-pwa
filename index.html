@@ -2,12 +2,13 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#FFD100">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Keeta Courier">
     <meta name="description" content="Keeta Courier Admin">
+    <meta name="format-detection" content="telephone=no">
 
     <title>Keeta Courier</title>
 
@@ -27,224 +28,312 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         html, body {
             width: 100%;
             height: 100%;
+            height: 100dvh;
             overflow: hidden;
-            background: #FFD100;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #FFD100 0%, #FFA500 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
         }
 
-        #loading {
+        .container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 32px 24px;
+            width: 100%;
+            max-width: 360px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            text-align: center;
+        }
+
+        .logo {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #FFD100 0%, #FFA500 100%);
+            border-radius: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 50px;
+            margin: 0 auto 24px;
+            box-shadow: 0 8px 24px rgba(255, 209, 0, 0.4);
+        }
+
+        .app-name {
+            font-size: 26px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .app-desc {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 32px;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 16px 24px;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-height: 56px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #FFD100 0%, #FFA500 100%);
+            color: #1a1a1a;
+            box-shadow: 0 4px 16px rgba(255, 209, 0, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 8px rgba(255, 209, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .btn-secondary:active {
+            background: #ebebeb;
+        }
+
+        .icon {
+            font-size: 20px;
+        }
+
+        /* 添加到主屏幕提示 */
+        .install-tip {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.85);
+            color: white;
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            max-width: 90%;
+            width: max-content;
+            z-index: 1000;
+        }
+
+        .install-tip.show {
+            display: flex;
+        }
+
+        .install-tip .close {
+            margin-left: 8px;
+            padding: 4px 8px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        /* iPhone 底部指示条适配 */
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            .container {
+                padding-bottom: max(20px, env(safe-area-inset-bottom));
+            }
+        }
+
+        /* 小屏幕适配 */
+        @media (max-height: 700px) {
+            .logo {
+                width: 80px;
+                height: 80px;
+                font-size: 40px;
+            }
+            .app-name {
+                font-size: 22px;
+            }
+            .card {
+                padding: 24px 20px;
+            }
+        }
+
+        /* 加载动画 */
+        .loading-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: #FFD100;
-            display: flex;
-            flex-direction: column;
+            background: rgba(255,255,255,0.9);
+            display: none;
             justify-content: center;
             align-items: center;
             z-index: 9999;
-            transition: opacity 0.3s ease;
         }
 
-        #loading.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .logo {
-            width: 80px;
-            height: 80px;
-            background: white;
-            border-radius: 20px;
+        .loading-overlay.show {
             display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 40px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-
-        .app-name {
-            font-size: 24px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 8px;
-        }
-
-        .loading-text {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 30px;
         }
 
         .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(0,0,0,0.1);
-            border-top-color: #333;
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(255, 209, 0, 0.2);
+            border-top-color: #FFD100;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: spin 0.8s linear infinite;
         }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-
-        #content {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        .redirect-message {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #FFD100;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 40px;
-            text-align: center;
-            z-index: 10000;
-        }
-
-        .redirect-message.show {
-            display: flex;
-        }
-
-        .redirect-icon {
-            font-size: 64px;
-            margin-bottom: 20px;
-        }
-
-        .redirect-title {
-            font-size: 22px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 12px;
-        }
-
-        .redirect-text {
-            font-size: 15px;
-            color: #666;
-            margin-bottom: 30px;
-            line-height: 1.5;
-        }
-
-        .btn {
-            background: #333;
-            color: white;
-            padding: 16px 40px;
-            border-radius: 12px;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            font-weight: 500;
-            border: none;
-            cursor: pointer;
-            width: 100%;
-            max-width: 280px;
-        }
-
-        .btn:active {
-            opacity: 0.8;
-        }
-
-        .manual-link {
-            margin-top: 20px;
-            color: #666;
-            font-size: 14px;
-        }
     </style>
 </head>
 <body>
-    <div id="loading">
-        <div class="logo">🛵</div>
-        <div class="app-name">Keeta Courier</div>
-        <div class="loading-text">正在加载...</div>
+    <div class="container">
+        <div class="card">
+            <div class="logo">🛵</div>
+            <div class="app-name">Keeta Courier</div>
+            <div class="app-desc">美团骑手管理后台</div>
+
+            <div class="btn-group">
+                <a href="https://courier.mykeeta.com/partner/web/admin/courier#/schedulerAdmin" class="btn btn-primary" id="openBtn">
+                    <span class="icon">🚀</span>
+                    <span>打开管理后台</span>
+                </a>
+
+                <button class="btn btn-secondary" id="installBtn" style="display: none;">
+                    <span class="icon">📱</span>
+                    <span>添加到主屏幕</span>
+                </button>
+
+                <button class="btn btn-secondary" onclick="copyUrl()">
+                    <span class="icon">🔗</span>
+                    <span>复制链接</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加到主屏幕提示 -->
+    <div class="install-tip" id="installTip">
+        <span>💡 点击"分享"按钮，然后选择"添加到主屏幕"</span>
+        <span class="close" onclick="hideInstallTip()">✕</span>
+    </div>
+
+    <!-- 加载动画 -->
+    <div class="loading-overlay" id="loading">
         <div class="spinner"></div>
     </div>
 
-    <div class="redirect-message" id="redirect">
-        <div class="redirect-icon">🔐</div>
-        <div class="redirect-title">需要登录</div>
-        <div class="redirect-text">由于安全限制，需要跳转到美团骑手管理页面进行登录</div>
-        <a href="https://courier.mykeeta.com/partner/web/admin/courier#/schedulerAdmin" class="btn" id="loginBtn">立即登录</a>
-    </div>
-
-    <iframe id="content" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>
-
     <script>
         const TARGET_URL = 'https://courier.mykeeta.com/partner/web/admin/courier#/schedulerAdmin';
-        const loading = document.getElementById('loading');
-        const redirect = document.getElementById('redirect');
-        const iframe = document.getElementById('content');
 
-        // Check if running in standalone PWA mode
+        // 检测是否已安装为 PWA
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
                             window.navigator.standalone === true;
 
-        function showRedirect() {
-            loading.classList.add('hidden');
-            redirect.classList.add('show');
-        }
+        // 检测是否为 iOS
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
-        function loadApp() {
-            // Try to load iframe first
-            iframe.src = TARGET_URL;
+        // 检测是否支持 PWA 安装
+        let deferredPrompt;
 
-            // Check if iframe loaded successfully after 3 seconds
-            setTimeout(() => {
-                try {
-                    // If we can't access iframe content due to cross-origin, it might still be blocked
-                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                    // If we can access it and it's empty or has error, show redirect
-                    if (!iframeDoc || iframeDoc.body.innerHTML === '') {
-                        showRedirect();
-                    }
-                } catch (e) {
-                    // Cross-origin error means it loaded (good)
-                    // But we should still check if user sees content
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installBtn').style.display = 'flex';
+        });
+
+        // 安装按钮点击
+        document.getElementById('installBtn').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    deferredPrompt = null;
                 }
-            }, 3000);
+            } else if (isIOS) {
+                showInstallTip();
+            }
+        });
 
-            // If loading takes too long (5s), show redirect option
-            setTimeout(() => {
-                showRedirect();
-            }, 5000);
-
-            // Handle iframe load
-            iframe.onload = function() {
-                setTimeout(() => {
-                    loading.classList.add('hidden');
-                }, 1000);
-            };
-
-            // Handle iframe error
-            iframe.onerror = function() {
-                showRedirect();
-            };
+        // iOS 显示安装提示
+        function showInstallTip() {
+            document.getElementById('installTip').classList.add('show');
+            setTimeout(hideInstallTip, 8000);
         }
 
-        // Register Service Worker
+        function hideInstallTip() {
+            document.getElementById('installTip').classList.remove('show');
+        }
+
+        // 复制链接
+        function copyUrl() {
+            navigator.clipboard.writeText(TARGET_URL).then(() => {
+                const btn = event.target.closest('.btn');
+                const original = btn.innerHTML;
+                btn.innerHTML = '<span class="icon">✓</span><span>已复制</span>';
+                setTimeout(() => {
+                    btn.innerHTML = original;
+                }, 2000);
+            });
+        }
+
+        // 打开按钮点击 - 添加加载动画
+        document.getElementById('openBtn').addEventListener('click', () => {
+            document.getElementById('loading').classList.add('show');
+        });
+
+        // 注册 Service Worker
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('service-worker.js')
                 .then(reg => console.log('Service Worker registered'))
                 .catch(err => console.log('Service Worker registration failed'));
         }
 
-        // Start loading
-        loadApp();
+        // 如果是 iOS 且未安装，显示安装提示
+        if (isIOS && !isStandalone) {
+            setTimeout(showInstallTip, 1500);
+        }
+
+        // 隐藏安装按钮如果已安装
+        if (isStandalone) {
+            document.getElementById('installBtn').style.display = 'none';
+        }
     </script>
 </body>
 </html>
