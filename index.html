@@ -80,6 +80,7 @@
         .loading-text {
             font-size: 14px;
             color: #666;
+            margin-bottom: 30px;
         }
 
         .spinner {
@@ -89,7 +90,6 @@
             border-top-color: #333;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-top: 20px;
         }
 
         @keyframes spin {
@@ -102,38 +102,68 @@
             border: none;
         }
 
-        .error-message {
+        .redirect-message {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            padding: 20px;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #FFD100;
             display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            text-align: center;
+            z-index: 10000;
         }
 
-        .error-message.show {
-            display: block;
+        .redirect-message.show {
+            display: flex;
         }
 
-        .error-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-        }
-
-        .error-text {
-            color: #666;
+        .redirect-icon {
+            font-size: 64px;
             margin-bottom: 20px;
+        }
+
+        .redirect-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .redirect-text {
+            font-size: 15px;
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.5;
         }
 
         .btn {
             background: #333;
             color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
+            padding: 16px 40px;
+            border-radius: 12px;
             text-decoration: none;
             display: inline-block;
             font-size: 16px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            max-width: 280px;
+        }
+
+        .btn:active {
+            opacity: 0.8;
+        }
+
+        .manual-link {
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -145,10 +175,11 @@
         <div class="spinner"></div>
     </div>
 
-    <div class="error-message" id="error">
-        <div class="error-icon">⚠️</div>
-        <div class="error-text">无法加载页面，请检查网络连接</div>
-        <a href="https://courier.mykeeta.com/partner/web/admin/courier#/schedulerAdmin" class="btn" target="_blank">在浏览器中打开</a>
+    <div class="redirect-message" id="redirect">
+        <div class="redirect-icon">🔐</div>
+        <div class="redirect-title">需要登录</div>
+        <div class="redirect-text">由于安全限制，需要跳转到美团骑手管理页面进行登录</div>
+        <a href="https://courier.mykeeta.com/partner/web/admin/courier#/schedulerAdmin" class="btn" id="loginBtn">立即登录</a>
     </div>
 
     <iframe id="content" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>
@@ -156,33 +187,53 @@
     <script>
         const TARGET_URL = 'https://courier.mykeeta.com/partner/web/admin/courier#/schedulerAdmin';
         const loading = document.getElementById('loading');
-        const error = document.getElementById('error');
+        const redirect = document.getElementById('redirect');
         const iframe = document.getElementById('content');
 
-        // Try to load the target URL
+        // Check if running in standalone PWA mode
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                            window.navigator.standalone === true;
+
+        function showRedirect() {
+            loading.classList.add('hidden');
+            redirect.classList.add('show');
+        }
+
         function loadApp() {
-            // Set iframe source
+            // Try to load iframe first
             iframe.src = TARGET_URL;
 
-            // Handle load event
+            // Check if iframe loaded successfully after 3 seconds
+            setTimeout(() => {
+                try {
+                    // If we can't access iframe content due to cross-origin, it might still be blocked
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    // If we can access it and it's empty or has error, show redirect
+                    if (!iframeDoc || iframeDoc.body.innerHTML === '') {
+                        showRedirect();
+                    }
+                } catch (e) {
+                    // Cross-origin error means it loaded (good)
+                    // But we should still check if user sees content
+                }
+            }, 3000);
+
+            // If loading takes too long (5s), show redirect option
+            setTimeout(() => {
+                showRedirect();
+            }, 5000);
+
+            // Handle iframe load
             iframe.onload = function() {
                 setTimeout(() => {
                     loading.classList.add('hidden');
-                }, 500);
+                }, 1000);
             };
 
-            // Handle error
+            // Handle iframe error
             iframe.onerror = function() {
-                loading.classList.add('hidden');
-                error.classList.add('show');
+                showRedirect();
             };
-
-            // Fallback: hide loading after 5 seconds anyway
-            setTimeout(() => {
-                if (!loading.classList.contains('hidden')) {
-                    loading.classList.add('hidden');
-                }
-            }, 5000);
         }
 
         // Register Service Worker
@@ -192,7 +243,7 @@
                 .catch(err => console.log('Service Worker registration failed'));
         }
 
-        // Load the app
+        // Start loading
         loadApp();
     </script>
 </body>
