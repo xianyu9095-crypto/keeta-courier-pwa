@@ -1,0 +1,21 @@
+iPad Chrome 使用步骤：
+
+1. 复制下面的代码（长按选择全部）：
+
+javascript:(async()=%3E%7Bconst%20s='1ygLS9F-lTiWONtHF0JY4SZpj7C7cFm0aLpLbS_iz9DE',u=%60https://docs.google.com/spreadsheets/d/%24%7Bs%7D/gviz/tq%3Ftqx=out:csv%26sheet=Sheet1%60,t=await(await%20fetch(u)).text(),l=t.split('\n'),r=%5B%5D;for(let%20i=1;i%3Cl.length;i++)%7Bconst%20v=l%5Bi%5D.split(',');if(v%5B1%5D%26%26v%5B3%5D)r.push(%7Bn:v%5B1%5D.trim(),e:v%5B3%5D.trim(),l:v%5B1%5D.trim().toLowerCase()%7D)%7Ddocument.querySelectorAll('td,span,div').forEach(e=%3E%7Bconst%20t=e.textContent.trim();if(!t%7C%7Ct.length%3C2%7C%7Ct.length%3E20)return;const%20c=t.replace(/%5B.…%5D+/g,'').trim().toLowerCase(),m=r.filter(x=%3Ex.l.startsWith(c)%7C%7Cx.l===c);if(m.length===1)%7Bconst%20b=document.createElement('span');b.style.cssText='background:%23FFD100;padding:2px%206px;border-radius:4px;font-size:11px;margin-left:5px;color:%23000;font-weight:bold;';b.textContent=m%5B0%5D.e;e.appendChild(b)%7D%7D);alert('✅%20完成!')%7D)()
+
+2. 在 Chrome 中：
+   - 访问任意网页（比如 google.com）
+   - 点击右上角 "⋮" 菜单
+   - 点击星星图标 "添加书签"
+   - 名称写：查ECODE
+   - 点击 "编辑"
+   - 删除网址，粘贴上面的代码
+   - 点击 "保存"
+
+3. 使用：
+   - 打开美团骑手后台
+   - 点击地址栏
+   - 输入 "查ECODE"
+   - 点击该书签
+   - 等待显示 "✅ 完成!"
