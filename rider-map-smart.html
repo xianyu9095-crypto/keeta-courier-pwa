@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#FFD100">
+    <title>骑手 ECODE 智能查询</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding-bottom: 100px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #FFD100 0%, #FFA500 100%);
+            padding: 20px;
+            padding-top: max(20px, env(safe-area-inset-top));
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            background: white;
+            outline: none;
+        }
+
+        .config-section {
+            background: white;
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .config-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .btn-config {
+            width: 100%;
+            padding: 12px;
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .sync-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: white;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+
+        .sync-status.syncing {
+            color: #FFA500;
+        }
+
+        .sync-status.synced {
+            color: #4CAF50;
+        }
+
+        .sync-status.error {
+            color: #f44336;
+        }
+
+        .sync-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .stats {
+            display: flex;
+            gap: 15px;
+            padding: 15px 20px;
+            background: white;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stat-item {
+            flex: 1;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #FFD100;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .column-info {
+            padding: 10px 20px;
+            background: #e3f2fd;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .rider-list {
+            padding: 15px;
+        }
+
+        .rider-card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .rider-card:active {
+            transform: scale(0.98);
+        }
+
+        .rider-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .rider-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #FFD100 0%, #FFA500 100%);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+        }
+
+        .rider-main {
+            flex: 1;
+        }
+
+        .rider-name {
+            font-size: 17px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .rider-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: #f5f5f5;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .rider-details {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 12px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            font-family: monospace;
+        }
+
+        .fab {
+            position: fixed;
+            bottom: max(20px, env(safe-area-inset-bottom));
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #FFD100 0%, #FFA500 100%);
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            color: #333;
+            box-shadow: 0 4px 20px rgba(255, 209, 0, 0.4);
+            cursor: pointer;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 14px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            display: block;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 209, 0, 0.2);
+            border-top-color: #FFD100;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .preview-section {
+            background: #f5f5f5;
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .preview-title {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .preview-columns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .preview-column {
+            background: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #333;
+            border: 2px solid #FFD100;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🛵 骑手 ECODE 智能查询</h1>
+        <div class="search-box">
+            <input type="text" class="search-input" id="searchInput" placeholder="搜索任何内容...">
+        </div>
+    </div>
+
+    <div class="config-section" id="configSection">
+        <input type="text" class="config-input" id="sheetUrl" placeholder="粘贴 Google 表格链接...">
+        <button class="btn-config" onclick="connectSheet()">🔗 连接表格</button>
+    </div>
+
+    <div class="sync-status syncing" id="syncStatus" style="display: none;">
+        <span>⏳ 正在同步...</span>
+        <button class="sync-btn" onclick="syncData()">🔄</button>
+    </div>
+
+    <div class="preview-section" id="previewSection" style="display: none;">
+        <div class="preview-title">检测到的列：</div>
+        <div class="preview-columns" id="previewColumns"></div>
+    </div>
+
+    <div class="column-info" id="columnInfo" style="display: none;"></div>
+
+    <div class="stats" id="statsSection" style="display: none;">
+        <div class="stat-item">
+            <div class="stat-value" id="totalCount">-</div>
+            <div class="stat-label">总记录</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value" id="columnCount">-</div>
+            <div class="stat-label">列数</div>
+        </div>
+    </div>
+
+    <div class="rider-list" id="riderList">
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>请输入表格链接</p>
+        </div>
+    </div>
+
+    <button class="fab" onclick="syncData()" style="display: none;" id="fabBtn">🔄</button>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        let sheetId = localStorage.getItem('smartSheetId');
+        let columnNames = [];
+        let data = [];
+        let nameColumnIndex = -1;
+        let ecodeColumnIndex = -1;
+
+        // 页面加载
+        document.addEventListener('DOMContentLoaded', function() {
+            if (sheetId) {
+                document.getElementById('sheetUrl').value = sheetId;
+                document.getElementById('configSection').style.display = 'none';
+                syncData();
+            }
+        });
+
+        function connectSheet() {
+            const url = document.getElementById('sheetUrl').value.trim();
+            if (!url) {
+                alert('请输入表格链接');
+                return;
+            }
+
+            // 提取ID
+            const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+            if (match) {
+                sheetId = match[1];
+            } else {
+                sheetId = url;
+            }
+
+            localStorage.setItem('smartSheetId', sheetId);
+            document.getElementById('configSection').style.display = 'none';
+            syncData();
+        }
+
+        async function syncData() {
+            if (!sheetId) return;
+
+            updateStatus('syncing', '⏳ 正在读取数据...');
+            showElement('syncStatus');
+            document.getElementById('riderList').innerHTML = '<div class="loading"><div class="spinner"></div><p>正在分析表格结构...</p></div>';
+
+            try {
+                const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=Sheet1`;
+                const response = await fetch(csvUrl);
+                const csvText = await response.text();
+
+                // 解析CSV
+                const lines = csvText.split('\n');
+                if (lines.length === 0) {
+                    throw new Error('表格为空');
+                }
+
+                // 第一行是列名
+                columnNames = parseCSVLine(lines[0]);
+
+                // 显示检测到的列
+                showPreviewColumns();
+
+                // 智能识别列
+                identifyColumns();
+
+                // 解析数据
+                data = [];
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+
+                    const values = parseCSVLine(line);
+                    if (values.length > 0) {
+                        const row = {};
+                        columnNames.forEach((name, index) => {
+                            row[name] = values[index] ? values[index].trim() : '';
+                        });
+                        data.push(row);
+                    }
+                }
+
+                // 保存缓存
+                localStorage.setItem('smartRiderCache', JSON.stringify(data));
+                localStorage.setItem('smartColumnNames', JSON.stringify(columnNames));
+                localStorage.setItem('smartCacheTime', new Date().toISOString());
+
+                renderData();
+                updateStatus('synced', `✅ 已读取 ${data.length} 条记录，${columnNames.length} 列`);
+                showToast('数据已更新！');
+
+                // 显示统计
+                document.getElementById('totalCount').textContent = data.length;
+                document.getElementById('columnCount').textContent = columnNames.length;
+                showElement('statsSection');
+                showElement('fabBtn');
+
+                // 显示列信息
+                showColumnInfo();
+
+            } catch (error) {
+                console.error('读取失败:', error);
+
+                // 使用缓存
+                const cached = localStorage.getItem('smartRiderCache');
+                const cachedColumns = localStorage.getItem('smartColumnNames');
+                if (cached && cachedColumns) {
+                    data = JSON.parse(cached);
+                    columnNames = JSON.parse(cachedColumns);
+                    renderData();
+                    updateStatus('error', '⚠️ 使用缓存数据');
+                    showToast('使用离线数据');
+                    showElement('statsSection');
+                    showElement('fabBtn');
+                } else {
+                    document.getElementById('riderList').innerHTML = '<div class="empty-state"><div class="icon">❌</div><p>读取失败，请检查表格是否已发布</p></div>';
+                    updateStatus('error', '❌ 读取失败');
+                }
+            }
+        }
+
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+
+                if (char === '"') {
+                    if (inQuotes && line[i + 1] === '"') {
+                        current += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+
+            result.push(current.trim());
+            return result;
+        }
+
+        function identifyColumns() {
+            nameColumnIndex = -1;
+            ecodeColumnIndex = -1;
+
+            columnNames.forEach((name, index) => {
+                const lowerName = name.toLowerCase();
+
+                // 识别名字列
+                if (nameColumnIndex === -1 &&
+                    (lowerName.includes('名字') ||
+                     lowerName.includes('姓名') ||
+                     lowerName.includes('name') ||
+                     lowerName.includes('骑手') ||
+                     lowerName.includes('人员') ||
+                     lowerName.includes('员工'))) {
+                    nameColumnIndex = index;
+                }
+
+                // 识别ECODE列
+                if (ecodeColumnIndex === -1 &&
+                    (lowerName.includes('ecode') ||
+                     lowerName.includes('code') ||
+                     lowerName.includes('编号') ||
+                     lowerName.includes('工号') ||
+                     lowerName.includes('id') ||
+                     lowerName.includes('编码'))) {
+                    ecodeColumnIndex = index;
+                }
+            });
+        }
+
+        function showPreviewColumns() {
+            const container = document.getElementById('previewColumns');
+            container.innerHTML = columnNames.map((name, i) =>
+                `<span class="preview-column">${i + 1}. ${escapeHtml(name)}</span>`
+            ).join('');
+            showElement('previewSection');
+        }
+
+        function showColumnInfo() {
+            let info = '';
+            if (nameColumnIndex !== -1) {
+                info += `✅ 名字列: 「${columnNames[nameColumnIndex]}」`;
+            }
+            if (ecodeColumnIndex !== -1) {
+                info += nameColumnIndex !== -1 ? ' | ' : '';
+                info += `✅ ECODE列: 「${columnNames[ecodeColumnIndex]}」`;
+            }
+            if (info) {
+                document.getElementById('columnInfo').textContent = info;
+                showElement('columnInfo');
+            }
+        }
+
+        function renderData(filter = '') {
+            const list = document.getElementById('riderList');
+
+            let displayData = data;
+            if (filter) {
+                const lowerFilter = filter.toLowerCase();
+                displayData = data.filter(row => {
+                    return Object.values(row).some(value =>
+                        String(value).toLowerCase().includes(lowerFilter)
+                    );
+                });
+            }
+
+            if (displayData.length === 0) {
+                list.innerHTML = '<div class="empty-state"><div class="icon">🔍</div><p>未找到记录</p></div>';
+                return;
+            }
+
+            list.innerHTML = displayData.map((row, index) => {
+                // 确定显示的主标题
+                let mainName = '';
+                if (nameColumnIndex !== -1 && row[columnNames[nameColumnIndex]]) {
+                    mainName = row[columnNames[nameColumnIndex]];
+                } else {
+                    // 找第一个非空值作为主标题
+                    mainName = Object.values(row).find(v => v) || '未命名';
+                }
+
+                // 确定ECODE
+                let ecode = '';
+                if (ecodeColumnIndex !== -1 && row[columnNames[ecodeColumnIndex]]) {
+                    ecode = row[columnNames[ecodeColumnIndex]];
+                }
+
+                // 生成详情行
+                const details = columnNames.map((colName, i) => {
+                    const value = row[colName] || '';
+                    if (!value) return '';
+                    // 跳过已作为主标题显示的列
+                    if (i === nameColumnIndex) return '';
+
+                    return `
+                        <div class="detail-row">
+                            <span class="detail-label">${escapeHtml(colName)}</span>
+                            <span class="detail-value">${escapeHtml(value)}</span>
+                        </div>
+                    `;
+                }).join('');
+
+                return `
+                    <div class="rider-card">
+                        <div class="rider-header">
+                            <div class="rider-avatar">🛵</div>
+                            <div class="rider-main">
+                                <div class="rider-name">${escapeHtml(mainName)}</div>
+                            </div>
+                            <div class="rider-actions">
+                                ${ecode ? `<button class="btn-icon" onclick="copyText('${escapeHtml(ecode)}')" title="复制ECODE">📋</button>` : ''}
+                            </div>
+                        </div>
+                        ${details ? `<div class="rider-details">${details}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function copyText(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('已复制: ' + text);
+            }).catch(() => {
+                const input = document.createElement('input');
+                input.value = text;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                showToast('已复制: ' + text);
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        function updateStatus(type, text) {
+            const status = document.getElementById('syncStatus');
+            status.className = 'sync-status ' + type;
+            status.querySelector('span').textContent = text;
+        }
+
+        function showElement(id) {
+            document.getElementById(id).style.display = 'block';
+        }
+
+        // 搜索功能
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            renderData(e.target.value);
+        });
+    </script>
+</body>
+</html>
