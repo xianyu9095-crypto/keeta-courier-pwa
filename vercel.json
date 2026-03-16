@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "name": "keeta-courier-pwa",
+  "builds": [
+    {
+      "src": "**/*.html",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
+}

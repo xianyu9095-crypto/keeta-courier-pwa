@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#FFD100">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Keeta Courier">
+    <meta name="description" content="Keeta Courier Admin">
+
+    <title>Keeta Courier</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512x512.png">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+
+    <!-- Safari Pinned Tab -->
+    <link rel="mask-icon" href="icons/icon-192x192.png" color="#FFD100">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #FFD100;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #FFD100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.3s ease;
+        }
+
+        #loading.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .app-name {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .loading-text {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(0,0,0,0.1);
+            border-top-color: #333;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-top: 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #content {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .error-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .error-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .error-text {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">
+        <div class="logo">🛵</div>
+        <div class="app-name">Keeta Courier</div>
+        <div class="loading-text">正在加载...</div>
+        <div class="spinner"></div>
+    </div>
+
+    <div class="error-message" id="error">
+        <div class="error-icon">⚠️</div>
+        <div class="error-text">无法加载页面，请检查网络连接</div>
+        <a href="https://courier.mykeeta.com/partner/web/admin/courier#/schedulerAdmin" class="btn" target="_blank">在浏览器中打开</a>
+    </div>
+
+    <iframe id="content" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>
+
+    <script>
+        const TARGET_URL = 'https://courier.mykeeta.com/partner/web/admin/courier#/schedulerAdmin';
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const iframe = document.getElementById('content');
+
+        // Try to load the target URL
+        function loadApp() {
+            // Set iframe source
+            iframe.src = TARGET_URL;
+
+            // Handle load event
+            iframe.onload = function() {
+                setTimeout(() => {
+                    loading.classList.add('hidden');
+                }, 500);
+            };
+
+            // Handle error
+            iframe.onerror = function() {
+                loading.classList.add('hidden');
+                error.classList.add('show');
+            };
+
+            // Fallback: hide loading after 5 seconds anyway
+            setTimeout(() => {
+                if (!loading.classList.contains('hidden')) {
+                    loading.classList.add('hidden');
+                }
+            }, 5000);
+        }
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js')
+                .then(reg => console.log('Service Worker registered'))
+                .catch(err => console.log('Service Worker registration failed'));
+        }
+
+        // Load the app
+        loadApp();
+    </script>
+</body>
+</html>
